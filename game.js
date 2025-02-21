@@ -13,12 +13,14 @@ let luckyDipEnabled = false; // Lucky Dip upgrade
 
 // Upgrade costs
 const upgradeCosts = {
+    
     "2x": 3500,
     "autoBuy": 5000,
     "autoSell": 7500,
     "bitcoinMiner": 10000,
     "priceStabilizer": 12000,
     "luckyDip": 15000
+    
 };
 
 // Select HTML elements
@@ -99,34 +101,35 @@ const lossSound = document.getElementById("lossSound");
 
 // Buy Bitcoin function
 function buyBitcoin(amount) {
-    const cost = amount * bitcoinValue;
+    const cost = amount * Math.floor(bitcoinValue); // Use integer value
     if (balance >= cost) {
         bitcoinAmount += amount;
         balance -= cost;
         updateGame();
         saveGame();
-        showFeedback(`Bought ${amount} BTC for $${cost.toFixed(2)}!`);
+        showFeedback(`Bought ${amount} BTC for $${cost}!`); // No decimals
         buySound.play();
     } else {
         showFeedback("Not enough balance to buy BTC!");
     }
 }
 
-// Sell Bitcoin function
 function sellBitcoin() {
     if (bitcoinAmount > 0) {
-        const totalValue = bitcoinAmount * bitcoinValue * multiplier;
+        const totalValue = bitcoinAmount * Math.floor(bitcoinValue) * multiplier; // Use integer value
         balance += totalValue;
         bitcoinAmount = 0;
         updateGame();
         saveGame();
-        showFeedback(`Sold all BTC for $${totalValue.toFixed(2)}!`);
+        showFeedback(`Sold all BTC for $${totalValue}!`); // No decimals
         sellSound.play();
         if (totalValue > 1000) showConfetti();
     } else {
         showFeedback("No BTC to sell!");
     }
 }
+
+
 
 // Auto-Buy logic
 setInterval(() => {
@@ -245,13 +248,14 @@ upgradeLuckyDip.addEventListener("click", () => {
 
 // Update the game UI
 function updateGame() {
-    balanceDisplay.textContent = balance.toFixed(2);
-    bitcoinValueDisplay.textContent = bitcoinValue.toFixed(2);
-    bitcoinAmountDisplay.textContent = bitcoinAmount;
+    // Round balance, Bitcoin value, and Bitcoin amount to integers
+    balanceDisplay.textContent = Math.floor(balance); // Remove decimals
+    bitcoinValueDisplay.textContent = Math.floor(bitcoinValue); // Remove decimals
+    bitcoinAmountDisplay.textContent = Math.floor(bitcoinAmount); // Remove decimals
 
-    // Calculate potential profit/loss
+    // Calculate potential profit/loss and round it
     const profitLoss = (bitcoinAmount * bitcoinValue * multiplier) - (balance + bitcoinAmount * bitcoinValue - 300);
-    profitLossDisplay.textContent = `${profitLoss >= 0 ? "+" : "-"}$${Math.abs(profitLoss).toFixed(2)}`;
+    profitLossDisplay.textContent = `${profitLoss >= 0 ? "+" : "-"}$${Math.floor(Math.abs(profitLoss))}`; // Remove decimals
     profitLossDisplay.style.color = profitLoss >= 0 ? "#26de76" : "#ce4b58"; // Green for profit, red for loss
 
     // Enable/disable upgrades
@@ -265,6 +269,27 @@ function updateGame() {
 
 // Generate new Bitcoin value
 function updateBitcoinValue() {
+
+    function updateBitcoinValue() {
+        const change = (Math.random() - 0.5) * 10; // Reduced volatility (smaller range)
+        bitcoinValue += change;
+    
+        // Add rare spikes and crashes
+        const rareEvent = Math.random();
+        if (rareEvent < 0.01) bitcoinValue = 600; // 1% chance for spike
+        if (rareEvent > 0.99) bitcoinValue = 45; // 1% chance for crash
+    
+        // Ensure Bitcoin value stays within reasonable bounds
+        if (bitcoinValue < 50) bitcoinValue = 50; // Minimum value
+        if (bitcoinValue > 1000) bitcoinValue = 1000; // Maximum value
+    
+        // Update the game UI
+        updateGame();
+    }
+    
+    // Update Bitcoin value every 2 seconds (slower updates)
+    setInterval(updateBitcoinValue, 2000);
+
     const resistanceFactor = Math.max(0, (bitcoinValue - 400) / 20);
     const resistance = resistanceFactor * 10;
 
@@ -288,8 +313,12 @@ function updateBitcoinValue() {
 function drawChart() {
     chartCtx.clearRect(0, 0, chartCanvas.width, chartCanvas.height);
 
-    // Draw grid lines
-    chartCtx.strokeStyle = "#444";
+    // Add a background color
+    chartCtx.fillStyle = "#1e1e2f"; // Dark background
+    chartCtx.fillRect(0, 0, chartCanvas.width, chartCanvas.height);
+
+    // Draw subtle grid lines
+    chartCtx.strokeStyle = "rgba(255, 255, 255, 0.1)"; // Light grid lines
     chartCtx.lineWidth = 0.5;
     for (let i = 0; i <= 10; i++) {
         const y = (i / 10) * chartCanvas.height;
@@ -301,8 +330,8 @@ function drawChart() {
 
     // Draw the Bitcoin value line
     chartCtx.beginPath();
-    chartCtx.strokeStyle = "#26de76";
-    chartCtx.lineWidth = 2;
+    chartCtx.strokeStyle = "#26de76"; // Bright green line
+    chartCtx.lineWidth = 3; // Thicker line
     chartCtx.lineJoin = "round";
     chartCtx.lineCap = "round";
 
@@ -366,10 +395,10 @@ function initGame() {
 
 function saveGame() {
     const gameState = {
-        balance,
-        bitcoinValue,
-        bitcoinAmount,
-        bitcoinHistory,
+        balance: Math.floor(balance),
+        bitcoinValue: Math.floor(bitcoinValue),
+        bitcoinAmount: Math.floor(bitcoinAmount),
+        bitcoinHistory: bitcoinHistory.map(value => Math.floor(value)),
         trend,
         multiplier,
         autoBuyEnabled,
@@ -378,9 +407,18 @@ function saveGame() {
         priceStabilizerEnabled,
         luckyDipEnabled,
         achievements,
+        // Save upgrade states
+        upgrades: {
+            upgrade2x: upgrade2x.classList.contains("disabled"),
+            upgradeAutoBuy: upgradeAutoBuy.classList.contains("disabled"),
+            upgradeAutoSell: upgradeAutoSell.classList.contains("disabled"),
+            upgradeBitcoinMiner: upgradeBitcoinMiner.classList.contains("disabled"),
+            upgradePriceStabilizer: upgradePriceStabilizer.classList.contains("disabled"),
+            upgradeLuckyDip: upgradeLuckyDip.classList.contains("disabled"),
+        },
     };
     localStorage.setItem("bitcoinBlitzSave", JSON.stringify(gameState));
-    console.log("Game saved automatically!"); // Optional: Log to console for debugging
+    console.log("Game saved automatically!");
 }
 
 function loadGame() {
@@ -402,12 +440,22 @@ function loadGame() {
         luckyDipEnabled = gameState.luckyDipEnabled;
         achievements = gameState.achievements;
 
+        // Restore upgrade states
+        if (gameState.upgrades) {
+            if (gameState.upgrades.upgrade2x) upgrade2x.classList.add("disabled");
+            if (gameState.upgrades.upgradeAutoBuy) upgradeAutoBuy.classList.add("disabled");
+            if (gameState.upgrades.upgradeAutoSell) upgradeAutoSell.classList.add("disabled");
+            if (gameState.upgrades.upgradeBitcoinMiner) upgradeBitcoinMiner.classList.add("disabled");
+            if (gameState.upgrades.upgradePriceStabilizer) upgradePriceStabilizer.classList.add("disabled");
+            if (gameState.upgrades.upgradeLuckyDip) upgradeLuckyDip.classList.add("disabled");
+        }
+
         // Update UI
         updateGame();
         drawChart();
-        console.log("Game loaded automatically!"); // Optional: Log to console for debugging
+        console.log("Game loaded automatically!");
     } else {
-        console.log("No save data found. Starting a new game."); // Optional: Log to console for debugging
+        console.log("No save data found. Starting a new game.");
     }
 }
 
@@ -422,3 +470,5 @@ function startGame() {
     // Load the saved game state after initialization
     loadGame();
 }
+
+
