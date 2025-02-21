@@ -79,6 +79,8 @@ body {
 #chart {
     width: 100%;
     height: 300px;
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 12px;
 }
 
 #buySellSection {
@@ -119,6 +121,19 @@ body {
 .upgrade.disabled {
     opacity: 0.5;
     cursor: not-allowed;
+    background: rgba(255, 255, 255, 0.05);
+}
+
+.upgrade strong {
+    font-size: 18px;
+    display: block;
+    margin-bottom: 5px;
+    color: #fff;
+}
+
+.upgrade small {
+    font-size: 14px;
+    color: #ccc;
 }
 
 .button {
@@ -174,10 +189,18 @@ body {
 .info {
     font-size: 20px;
     margin-top: 10px;
+    color: #fff;
+    text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.5);
+}
+
+.info p {
+    margin: 5px 0;
 }
 
 #profitLoss {
     font-weight: bold;
+    font-size: 20px;
+    text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.5);
 }
 
 @keyframes fadeInOut {
@@ -188,6 +211,15 @@ body {
 }
 
 .feedback {
+    position: fixed;
+    bottom: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: rgba(0, 0, 0, 0.8);
+    color: white;
+    padding: 10px 20px;
+    border-radius: 8px;
+    z-index: 1000;
     animation: fadeInOut 2s ease-in-out;
 }
 
