@@ -10,17 +10,24 @@ let autoSellEnabled = false; // Auto-sell upgrade
 let bitcoinMinerEnabled = false; // Bitcoin Miner upgrade
 let priceStabilizerEnabled = false; // Price Stabilizer upgrade
 let luckyDipEnabled = false; // Lucky Dip upgrade
+let bitcoinLotteryEnabled = false; // Random Multiplier
+let bitcoinCloudMiningEnabled = false; // Passive BTC
+let bitcoinATMEnabled = false;     // Passive Income
+let bitcoinHalvingEnabled = false; // 4x Multiplier
 
 // Upgrade costs
 const upgradeCosts = {
     
-    "2x": 3500,
-    "autoBuy": 5000,
-    "autoSell": 7500,
+    "2x": 5000,
+    "autoBuy": 6500,
+    "autoSell": 8500,
     "bitcoinMiner": 10000,
-    "priceStabilizer": 12000,
-    "luckyDip": 15000
-    
+    "priceStabilizer": 15000,
+    "luckyDip": 20000,
+    "bitcoinLottery": 50000,
+    "bitcoinCloudMining": 80000,
+    "bitcoinATM": 65000,
+    "bitcoinHalving": 650000, // New
 };
 
 // Select HTML elements
@@ -477,3 +484,87 @@ function toggleNightMode() {
 document.addEventListener('dblclick', function (event) {
     event.preventDefault(); // Prevent default double-tap behavior
 }, { passive: false });
+
+
+// Bitcoin Halving (4x Multiplier)
+upgradeBitcoinHalving.addEventListener("click", () => {
+    if (balance >= upgradeCosts["bitcoinHalving"]) {
+        balance -= upgradeCosts["bitcoinHalving"];
+        multiplier *= 2; // Double the multiplier again (2x -> 4x)
+        upgradeBitcoinHalving.classList.add("disabled");
+        updateGame();
+        saveGame();
+        showFeedback("Bitcoin Halving enabled! Profits are now 4x!");
+        upgradeSound.play();
+    } else {
+        showFeedback("Not enough balance to buy this upgrade!");
+    }
+});
+
+upgradeBitcoinATM.addEventListener("click", () => {
+    if (balance >= upgradeCosts["bitcoinATM"]) {
+        balance -= upgradeCosts["bitcoinATM"];
+        bitcoinATMEnabled = true;
+        upgradeBitcoinATM.classList.add("disabled");
+        updateGame();
+        saveGame();
+        showFeedback("Bitcoin ATM enabled! Generate $500 every 30 seconds.");
+        upgradeSound.play();
+    } else {
+        showFeedback("Not enough balance to buy this upgrade!");
+    }
+});
+
+upgradeBitcoinLottery.addEventListener("click", () => {
+    if (balance >= upgradeCosts["bitcoinLottery"]) {
+        balance -= upgradeCosts["bitcoinLottery"];
+        bitcoinLotteryEnabled = true;
+        upgradeBitcoinLottery.classList.add("disabled");
+        updateGame();
+        saveGame();
+        showFeedback("Bitcoin Lottery enabled! Randomly multiply BTC value by 1x to 10x every 5 minutes.");
+        upgradeSound.play();
+    } else {
+        showFeedback("Not enough balance to buy this upgrade!");
+    }
+});
+
+upgradeBitcoinCloudMining.addEventListener("click", () => {
+    if (balance >= upgradeCosts["bitcoinCloudMining"]) {
+        balance -= upgradeCosts["bitcoinCloudMining"];
+        bitcoinCloudMiningEnabled = true;
+        upgradeBitcoinCloudMining.classList.add("disabled");
+        updateGame();
+        saveGame();
+        showFeedback("Bitcoin Cloud Mining enabled! Generate 0.01 BTC every minute.");
+        upgradeSound.play();
+    } else {
+        showFeedback("Not enough balance to buy this upgrade!");
+    }
+});
+
+// Bitcoin ATM (Passive Income)
+setInterval(() => {
+    if (bitcoinATMEnabled) {
+        balance += 500; // Generate $500 every 30 seconds
+        updateGame();
+    }
+}, 30000);
+
+// Bitcoin Lottery (Random Multiplier)
+setInterval(() => {
+    if (bitcoinLotteryEnabled && Math.random() < 0.2) { // 20% chance every 5 minutes
+        const randomMultiplier = 1 + Math.random() * 9; // 1x to 10x
+        bitcoinValue *= randomMultiplier;
+        showFeedback(`Bitcoin Lottery! BTC value multiplied by ${randomMultiplier.toFixed(2)}x!`);
+    }
+}, 300000); // Every 5 minutes
+
+// Bitcoin Cloud Mining (Passive BTC)
+setInterval(() => {
+    if (bitcoinCloudMiningEnabled) {
+        bitcoinAmount += 0.01; // Generate 0.01 BTC every minute
+        updateGame();
+    }
+}, 60000);
+
