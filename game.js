@@ -473,3 +473,7 @@ function startGame() {
 function toggleNightMode() {
     document.body.classList.toggle("night-mode");
 }
+
+document.addEventListener('dblclick', function (event) {
+    event.preventDefault(); // Prevent default double-tap behavior
+}, { passive: false });
