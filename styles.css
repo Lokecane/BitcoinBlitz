@@ -15,6 +15,13 @@ body {
     padding: 20px;
 }
 
+/* Logo */
+#logo {
+    width: 150px;
+    margin: 20px auto;
+    display: block;
+}
+
 /* Buttons */
 button {
     background-color: #26de76;
@@ -48,14 +55,42 @@ canvas {
 }
 
 /* Responsive Layout */
-@media (max-width: 768px) {
+@media (max-width: 1024px) {
     #gameContainer {
-        width: 90%;
+        width: 85%;
+        max-width: 700px;
+        padding-top: 50px; /* More space at the top */
+    }
+    
+    #logo {
+        width: 180px; /* Slightly bigger logo */
+        margin-top: 30px;
+    }
+
+    body {
+        font-size: 18px; /* Make text easier to read */
     }
 }
 
+/* Zoom out for iPads */
+@media (max-width: 900px) and (min-width: 600px) {
+    body {
+        zoom: 0.9; /* Slightly smaller scale */
+    }
+}
+
+/* Zoom out even more for smaller iPhones */
 @media (max-width: 480px) {
     body {
         font-size: 16px;
+        zoom: 0.85; /* Makes everything slightly smaller */
+    }
+
+    #gameContainer {
+        padding-top: 70px; /* More space on smaller screens */
+    }
+
+    #logo {
+        width: 150px; /* Keep logo size balanced */
     }
 }
