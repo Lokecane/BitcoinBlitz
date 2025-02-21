@@ -248,14 +248,14 @@ upgradeLuckyDip.addEventListener("click", () => {
 
 // Update the game UI
 function updateGame() {
-    // Format and display balance, Bitcoin value, and Bitcoin amount
-    balanceDisplay.textContent = formatNumber(balance);
-    bitcoinValueDisplay.textContent = formatNumber(bitcoinValue);
-    bitcoinAmountDisplay.textContent = formatNumber(bitcoinAmount);
+    // Round balance, Bitcoin value, and Bitcoin amount to integers
+    balanceDisplay.textContent = Math.floor(balance); // Remove decimals
+    bitcoinValueDisplay.textContent = Math.floor(bitcoinValue); // Remove decimals
+    bitcoinAmountDisplay.textContent = Math.floor(bitcoinAmount); // Remove decimals
 
-    // Calculate potential profit/loss and format it
+    // Calculate potential profit/loss and round it
     const profitLoss = (bitcoinAmount * bitcoinValue * multiplier) - (balance + bitcoinAmount * bitcoinValue - 300);
-    profitLossDisplay.textContent = `${profitLoss >= 0 ? "+" : "-"}${formatNumber(Math.abs(profitLoss))}`;
+    profitLossDisplay.textContent = `${profitLoss >= 0 ? "+" : "-"}$${Math.floor(Math.abs(profitLoss))}`; // Remove decimals
     profitLossDisplay.style.color = profitLoss >= 0 ? "#26de76" : "#ce4b58"; // Green for profit, red for loss
 
     // Enable/disable upgrades
@@ -271,7 +271,7 @@ function updateGame() {
 function updateBitcoinValue() {
 
     function updateBitcoinValue() {
-        const change = (Math.random() - 0.5) * 5; // Reduced volatility (smaller range)
+        const change = (Math.random() - 0.5) * 10; // Reduced volatility (smaller range)
         bitcoinValue += change;
     
         // Add rare spikes and crashes
@@ -288,7 +288,7 @@ function updateBitcoinValue() {
     }
     
     // Update Bitcoin value every 2 seconds (slower updates)
-    setInterval(updateBitcoinValue, 5000);
+    setInterval(updateBitcoinValue, 2000);
 
     const resistanceFactor = Math.max(0, (bitcoinValue - 400) / 20);
     const resistance = resistanceFactor * 10;
@@ -347,20 +347,6 @@ function drawChart() {
 
     chartCtx.stroke();
 }
-
-function formatNumber(number) {
-    if (number >= 1e6) {
-        return `${(number / 1e6).toFixed(1)}M`; // Convert to millions (e.g., 26M)
-    } else if (number >= 1e3) {
-        return `${(number / 1e3).toFixed(1)}K`; // Convert to thousands (e.g., 26K)
-    } else {
-        return Math.floor(number); // No formatting for small numbers
-    }
-}
-
-
-// Update the chart every 2 seconds (slower updates)
-setInterval(drawChart, 2000);
 
 buy1Button.addEventListener("click", () => buyBitcoin(1));
 buy5Button.addEventListener("click", () => buyBitcoin(5));
@@ -471,8 +457,7 @@ function loadGame() {
     } else {
         console.log("No save data found. Starting a new game.");
     }
-} 
-
+}
 
 function startGame() {
     // Hide the welcome screen and show the game container
@@ -485,5 +470,4 @@ function startGame() {
     // Load the saved game state after initialization
     loadGame();
 }
-
 
