@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <meta name="google-adsense-account" content="ca-pub-5829192721714825">
     <link rel="stylesheet" href="styles.css">
     <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-5829192721714825"
@@ -14,6 +15,8 @@
 </head>
 <body>
 
+
+
     <div id="gameContainer">
         <!-- Header -->
         <div id="header">
@@ -22,6 +25,7 @@
 
         <!-- Buy Buttons -->
         <div id="buyButtons">
+            <button onclick="toggleNightMode()" class="button">Toggle Night Mode</button>
             <button class="button" id="buy1Button"><i class="fas fa-coins"></i> Buy 1 BTC</button>
             <button class="button" id="buy5Button"><i class="fas fa-coins"></i> Buy 5 BTC</button>
             <button class="button" id="buy10Button"><i class="fas fa-coins"></i> Buy 10 BTC</button>
@@ -29,6 +33,8 @@
             <button class="button" id="buy100Button"><i class="fas fa-coins"></i> Buy 100 BTC</button>
         </div>
 
+
+        
         <!-- Main Section -->
         <div id="mainSection">
             <!-- Chart and Buy/Sell Buttons -->
@@ -49,7 +55,7 @@
             <!-- Upgrade Section -->
             <div id="upgradeSection">
                 <h3>Upgrades</h3>
-                <div class="upgrade" id="upgrade2x">
+                <div class="upgrade" id="upgrade2x" title="Double your profits when selling Bitcoin!">
                     <strong>2x Multiplier</strong><br>
                     Double your profits!<br>
                     <small>Cost: $3,500</small>
@@ -96,6 +102,8 @@
     <script src="game.js"></script>
 </body>
 </html>
+
+</div>
 <div id="welcomeScreen" style="text-align: center; padding: 20px;">
     <h1>Welcome to Bitcoin Blitz!</h1>
     <p>Buy and sell Bitcoin to grow your wealth. Unlock upgrades to maximize your profits!</p>

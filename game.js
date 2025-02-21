@@ -470,4 +470,6 @@ function startGame() {
     // Load the saved game state after initialization
     loadGame();
 }
-
+function toggleNightMode() {
+    document.body.classList.toggle("night-mode");
+}
