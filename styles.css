@@ -12,6 +12,20 @@ body {
     overflow: hidden;
 }
 
+
+#holdingTimer {
+    position: fixed;
+    bottom: 60px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: rgba(0, 0, 0, 0.8);
+    color: white;
+    padding: 10px 20px;
+    border-radius: 8px;
+    font-size: 14px;
+    z-index: 1000;
+}
+
 #gameContainer {
     max-width: 1200px;
     width: 100%;
@@ -159,6 +173,17 @@ body {
     background: linear-gradient(135deg, #5351ce, #5351ce);
     border-radius: 14px;
     z-index: -1;
+}
+
+.button.disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+    background: linear-gradient(135deg, #888, #555);
+}
+
+.button.disabled:hover {
+    transform: none;
+    box-shadow: none;
 }
 
 .button:hover {

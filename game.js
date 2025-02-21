@@ -14,6 +14,7 @@ let bitcoinLotteryEnabled = false; // Random Multiplier
 let bitcoinCloudMiningEnabled = false; // Passive BTC
 let bitcoinATMEnabled = false;     // Passive Income
 let bitcoinHalvingEnabled = false; // 4x Multiplier
+let bitcoinPurchaseTime = null;
 
 // Upgrade costs
 const upgradeCosts = {
@@ -112,9 +113,10 @@ function buyBitcoin(amount) {
     if (balance >= cost) {
         bitcoinAmount += amount;
         balance -= cost;
+        bitcoinPurchaseTime = Date.now(); // Record the purchase time
         updateGame();
         saveGame();
-        showFeedback(`Bought ${amount} BTC for $${cost}!`); // No decimals
+        showFeedback(`Bought ${amount} BTC for $${cost}!`);
         buySound.play();
     } else {
         showFeedback("Not enough balance to buy BTC!");
@@ -123,12 +125,25 @@ function buyBitcoin(amount) {
 
 function sellBitcoin() {
     if (bitcoinAmount > 0) {
-        const totalValue = bitcoinAmount * Math.floor(bitcoinValue) * multiplier; // Use integer value
+        const currentTime = Date.now();
+        const holdingTime = (currentTime - bitcoinPurchaseTime) / 1000; // Holding time in seconds
+
+        let totalValue;
+        if (holdingTime >= 10) {
+            // Apply the multiplier if Bitcoin has been held for at least 10 seconds
+            totalValue = bitcoinAmount * Math.floor(bitcoinValue) * multiplier;
+            showFeedback(`Sold all BTC for $${totalValue} (2x multiplier applied)!`);
+        } else {
+            // No multiplier if Bitcoin is sold too quickly
+            totalValue = bitcoinAmount * Math.floor(bitcoinValue);
+            showFeedback(`Sold all BTC for $${totalValue} (no multiplier, sold too quickly)!`);
+        }
+
         balance += totalValue;
         bitcoinAmount = 0;
+        bitcoinPurchaseTime = null; // Reset purchase time
         updateGame();
         saveGame();
-        showFeedback(`Sold all BTC for $${totalValue}!`); // No decimals
         sellSound.play();
         if (totalValue > 1000) showConfetti();
     } else {
@@ -174,6 +189,7 @@ upgrade2x.addEventListener("click", () => {
         balance -= upgradeCosts["2x"];
         multiplier *= 2;
         upgrade2x.classList.add("disabled");
+        upgrade2x.disabled = true; // Disable the button
         updateGame();
         saveGame();
         showFeedback(`Upgraded to 2x multiplier!`);
@@ -188,6 +204,7 @@ upgradeAutoBuy.addEventListener("click", () => {
         balance -= upgradeCosts["autoBuy"];
         autoBuyEnabled = true;
         upgradeAutoBuy.classList.add("disabled");
+        upgradeAutoBuy.disabled = true; // Disable the button
         updateGame();
         saveGame();
         showFeedback(`Auto-Buy enabled!`);
@@ -202,6 +219,7 @@ upgradeAutoSell.addEventListener("click", () => {
         balance -= upgradeCosts["autoSell"];
         autoSellEnabled = true;
         upgradeAutoSell.classList.add("disabled");
+        upgradeAutoSell.disabled = true; // Disable the button
         updateGame();
         saveGame();
         showFeedback(`Auto-Sell enabled!`);
@@ -216,6 +234,7 @@ upgradeBitcoinMiner.addEventListener("click", () => {
         balance -= upgradeCosts["bitcoinMiner"];
         bitcoinMinerEnabled = true;
         upgradeBitcoinMiner.classList.add("disabled");
+        upgradeBitcoinMiner.disabled = true; // Disable the button
         updateGame();
         saveGame();
         showFeedback(`Bitcoin Miner enabled!`);
@@ -230,6 +249,7 @@ upgradePriceStabilizer.addEventListener("click", () => {
         balance -= upgradeCosts["priceStabilizer"];
         priceStabilizerEnabled = true;
         upgradePriceStabilizer.classList.add("disabled");
+        upgradePriceStabilizer.disabled = true; // Disable the button
         updateGame();
         saveGame();
         showFeedback(`Price Stabilizer enabled!`);
@@ -253,6 +273,9 @@ upgradeLuckyDip.addEventListener("click", () => {
     }
 });
 
+
+
+
 // Update the game UI
 function updateGame() {
     // Round balance, Bitcoin value, and Bitcoin amount to integers
@@ -265,64 +288,81 @@ function updateGame() {
     profitLossDisplay.textContent = `${profitLoss >= 0 ? "+" : "-"}$${Math.floor(Math.abs(profitLoss))}`; // Remove decimals
     profitLossDisplay.style.color = profitLoss >= 0 ? "#26de76" : "#ce4b58"; // Green for profit, red for loss
 
-    // Enable/disable upgrades
-    upgrade2x.disabled = balance < upgradeCosts["2x"];
-    upgradeAutoBuy.disabled = balance < upgradeCosts["autoBuy"];
-    upgradeAutoSell.disabled = balance < upgradeCosts["autoSell"];
-    upgradeBitcoinMiner.disabled = balance < upgradeCosts["bitcoinMiner"];
-    upgradePriceStabilizer.disabled = balance < upgradeCosts["priceStabilizer"];
-    upgradeLuckyDip.disabled = balance < upgradeCosts["luckyDip"];
+    // Enable/disable upgrades (only if they haven't been purchased)
+    upgrade2x.disabled = balance < upgradeCosts["2x"] || upgrade2x.classList.contains("disabled");
+    upgradeAutoBuy.disabled = balance < upgradeCosts["autoBuy"] || upgradeAutoBuy.classList.contains("disabled");
+    upgradeAutoSell.disabled = balance < upgradeCosts["autoSell"] || upgradeAutoSell.classList.contains("disabled");
+    upgradeBitcoinMiner.disabled = balance < upgradeCosts["bitcoinMiner"] || upgradeBitcoinMiner.classList.contains("disabled");
+    upgradePriceStabilizer.disabled = balance < upgradeCosts["priceStabilizer"] || upgradePriceStabilizer.classList.contains("disabled");
+    upgradeLuckyDip.disabled = balance < upgradeCosts["luckyDip"] || upgradeLuckyDip.classList.contains("disabled");
 }
 
 // Generate new Bitcoin value
 function updateBitcoinValue() {
+    // Calculate Balance Multiplier
+    const balanceMultiplier = 1 + (balance / 300000); // Very gradual increase based on balance
+    // Example: If balance is $150,000, multiplier = 1.5 (150,000 / 300,000 = 0.5, +1 = 1.5)
 
-    function updateBitcoinValue() {
-        const change = (Math.random() - 0.5) * 10; // Reduced volatility (smaller range)
-        bitcoinValue += change;
-    
-        // Add rare spikes and crashes
-        const rareEvent = Math.random();
-        if (rareEvent < 0.01) bitcoinValue = 600; // 1% chance for spike
-        if (rareEvent > 0.99) bitcoinValue = 45; // 1% chance for crash
-    
-        // Ensure Bitcoin value stays within reasonable bounds
-        if (bitcoinValue < 50) bitcoinValue = 50; // Minimum value
-        if (bitcoinValue > 1000) bitcoinValue = 1000; // Maximum value
-    
-        // Update the game UI
-        updateGame();
-    }
-    
-    // Update Bitcoin value every 2 seconds (slower updates)
-    setInterval(updateBitcoinValue, 2000);
+    // Calculate Price Change
+    const baseChange = (Math.random() - 0.5) * 5; // Smaller price changes (±2.5)
+    const change = baseChange * balanceMultiplier; // Apply balance multiplier
 
-    const resistanceFactor = Math.max(0, (bitcoinValue - 400) / 20);
-    const resistance = resistanceFactor * 10;
+    // Update Bitcoin Value
+    bitcoinValue += change;
 
-    const supportFactor = Math.max(0, (80 - bitcoinValue) / 20);
-    const support = supportFactor * 10;
+    // Ensure Bitcoin Value Stays Within Bounds
+    if (bitcoinValue < 75) bitcoinValue = 75; // Minimum value is now 75
+    if (bitcoinValue > 1000) bitcoinValue = 1000; // Maximum value is now 1000
 
-    const change = (Math.random() * 50 - 25) + trend - resistance + support;
-    bitcoinValue = Math.max(60, Math.min(420, bitcoinValue + change));
-
-    trend += Math.random() * 4 - 2;
-    trend = Math.max(-10, Math.min(10, trend));
-
+    // Update Bitcoin History
     bitcoinHistory.push(bitcoinValue);
     if (bitcoinHistory.length > 20) bitcoinHistory.shift();
 
+    // Update Game UI
     updateGame();
     drawChart();
 }
 
-// Draw the Bitcoin value chart
+// Call updateBitcoinValue every 1000ms (1 second updates)
+setInterval(updateBitcoinValue, 50000);
+
 function drawChart() {
+    const chartCanvas = document.getElementById("chart");
+    const chartCtx = chartCanvas.getContext("2d");
+
+    // Clear the chart
     chartCtx.clearRect(0, 0, chartCanvas.width, chartCanvas.height);
 
-    // Add a background color
     chartCtx.fillStyle = "#1e1e2f"; // Dark background
     chartCtx.fillRect(0, 0, chartCanvas.width, chartCanvas.height);
+
+    // Calculate min and max values in bitcoinHistory
+    const minValue = Math.min(...bitcoinHistory);
+    const maxValue = Math.max(...bitcoinHistory);
+
+    // Add some padding to the Y-axis
+    const padding = 20;
+    const chartMin = minValue - padding;
+    const chartMax = maxValue + padding;
+
+    // Draw the Bitcoin value line
+    chartCtx.beginPath();
+    chartCtx.strokeStyle = "#26de76"; // Bright green line
+    chartCtx.lineWidth = 4.5; // Thicker line
+    chartCtx.lineJoin = "round";
+    chartCtx.lineCap = "round";
+
+    bitcoinHistory.forEach((value, index) => {
+        const x = (index / bitcoinHistory.length) * chartCanvas.width;
+        const y = chartCanvas.height - ((value - chartMin) / (chartMax - chartMin)) * chartCanvas.height;
+        if (index === 0) {
+            chartCtx.moveTo(x, y);
+        } else {
+            chartCtx.lineTo(x, y);
+        }
+    });
+
+    chartCtx.stroke();
 
     // Draw subtle grid lines
     chartCtx.strokeStyle = "rgba(255, 255, 255, 0.1)"; // Light grid lines
@@ -334,26 +374,9 @@ function drawChart() {
         chartCtx.lineTo(chartCanvas.width, y);
         chartCtx.stroke();
     }
-
-    // Draw the Bitcoin value line
-    chartCtx.beginPath();
-    chartCtx.strokeStyle = "#26de76"; // Bright green line
-    chartCtx.lineWidth = 3; // Thicker line
-    chartCtx.lineJoin = "round";
-    chartCtx.lineCap = "round";
-
-    bitcoinHistory.forEach((value, index) => {
-        const x = (index / 20) * chartCanvas.width;
-        const y = chartCanvas.height - ((value - 60) / (420 - 60)) * chartCanvas.height;
-        if (index === 0) {
-            chartCtx.moveTo(x, y);
-        } else {
-            chartCtx.lineTo(x, y);
-        }
-    });
-
-    chartCtx.stroke();
 }
+
+// Draw the Bitcoin value char
 
 buy1Button.addEventListener("click", () => buyBitcoin(1));
 buy5Button.addEventListener("click", () => buyBitcoin(5));
@@ -395,7 +418,7 @@ function showConfetti() {
 
 // Initialize game
 function initGame() {
-    setInterval(updateBitcoinValue, 100); // Update Bitcoin value every 100ms
+    setInterval(updateBitcoinValue, 100); // Update Bitcoin value every 0.1 seconds
     setInterval(updateGame, 1000); // Update profit/loss every second
     updateGame(); // Initial UI update
 }
@@ -506,6 +529,7 @@ upgradeBitcoinATM.addEventListener("click", () => {
         balance -= upgradeCosts["bitcoinATM"];
         bitcoinATMEnabled = true;
         upgradeBitcoinATM.classList.add("disabled");
+        upgradeBitcoinATM.disabled = true; // Disable the button
         updateGame();
         saveGame();
         showFeedback("Bitcoin ATM enabled! Generate $500 every 30 seconds.");
@@ -520,6 +544,7 @@ upgradeBitcoinLottery.addEventListener("click", () => {
         balance -= upgradeCosts["bitcoinLottery"];
         bitcoinLotteryEnabled = true;
         upgradeBitcoinLottery.classList.add("disabled");
+        upgradeBitcoinLottery.disabled = true; // Disable the button
         updateGame();
         saveGame();
         showFeedback("Bitcoin Lottery enabled! Randomly multiply BTC value by 1x to 10x every 5 minutes.");
@@ -534,6 +559,7 @@ upgradeBitcoinCloudMining.addEventListener("click", () => {
         balance -= upgradeCosts["bitcoinCloudMining"];
         bitcoinCloudMiningEnabled = true;
         upgradeBitcoinCloudMining.classList.add("disabled");
+        upgradeBitcoinCloudMining.disabled = true; // Disable the button
         updateGame();
         saveGame();
         showFeedback("Bitcoin Cloud Mining enabled! Generate 0.01 BTC every minute.");

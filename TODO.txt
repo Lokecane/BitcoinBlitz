@@ -1,0 +1,11 @@
+# Navigate to your project folder
+cd path/to/your/project
+
+# Stage all changes
+git add .
+
+# Commit changes with a message
+git commit -m "Added new Bitcoin upgrade feature"
+
+# Push changes to GitHub
+git push origin main
