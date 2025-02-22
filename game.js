@@ -151,6 +151,23 @@ function sellBitcoin() {
     }
 }
 
+function updateHoldingTimer() {
+    if (bitcoinPurchaseTime) {
+        const currentTime = Date.now();
+        const holdingTime = (currentTime - bitcoinPurchaseTime) / 1000;
+        const remainingTime = Math.max(10 - holdingTime, 0);
+
+        if (remainingTime > 0) {
+            document.getElementById("holdingTimer").style.display = "block";
+            document.getElementById("holdingTimeRemaining").textContent = Math.floor(remainingTime);
+        } else {
+            document.getElementById("holdingTimer").style.display = "none";
+        }
+    }
+}
+
+// Call this function in your game loop
+setInterval(updateHoldingTimer, 1000);
 
 
 // Auto-Buy logic
@@ -185,14 +202,15 @@ setInterval(() => {
 
 // Upgrade functions
 upgrade2x.addEventListener("click", () => {
-    if (balance >= upgradeCosts["2x"]) {
+    if (balance >= upgradeCosts["2x"] && !upgrade2x.disabled) {
         balance -= upgradeCosts["2x"];
         multiplier *= 2;
-        upgrade2x.classList.add("disabled");
+        upgrade2x.classList.add("disabled"); // Add disabled class
         upgrade2x.disabled = true; // Disable the button
+        upgrade2x.removeEventListener("click", arguments.callee); // Remove the event listener
         updateGame();
         saveGame();
-        showFeedback(`Upgraded to 2x multiplier!`);
+        showFeedback("2x Multiplier enabled!");
         upgradeSound.play();
     } else {
         showFeedback("Not enough balance to buy upgrade!");
@@ -278,17 +296,17 @@ upgradeLuckyDip.addEventListener("click", () => {
 
 // Update the game UI
 function updateGame() {
-    // Round balance, Bitcoin value, and Bitcoin amount to integers
-    balanceDisplay.textContent = Math.floor(balance); // Remove decimals
-    bitcoinValueDisplay.textContent = Math.floor(bitcoinValue); // Remove decimals
-    bitcoinAmountDisplay.textContent = Math.floor(bitcoinAmount); // Remove decimals
+    // Update UI elements
+    balanceDisplay.textContent = Math.floor(balance);
+    bitcoinValueDisplay.textContent = Math.floor(bitcoinValue);
+    bitcoinAmountDisplay.textContent = Math.floor(bitcoinAmount);
 
-    // Calculate potential profit/loss and round it
+    // Calculate potential profit/loss
     const profitLoss = (bitcoinAmount * bitcoinValue * multiplier) - (balance + bitcoinAmount * bitcoinValue - 300);
-    profitLossDisplay.textContent = `${profitLoss >= 0 ? "+" : "-"}$${Math.floor(Math.abs(profitLoss))}`; // Remove decimals
-    profitLossDisplay.style.color = profitLoss >= 0 ? "#26de76" : "#ce4b58"; // Green for profit, red for loss
+    profitLossDisplay.textContent = `${profitLoss >= 0 ? "+" : "-"}$${Math.floor(Math.abs(profitLoss))}`;
+    profitLossDisplay.style.color = profitLoss >= 0 ? "#26de76" : "#ce4b58";
 
-    // Enable/disable upgrades (only if they haven't been purchased)
+    // Enable/disable upgrades
     upgrade2x.disabled = balance < upgradeCosts["2x"] || upgrade2x.classList.contains("disabled");
     upgradeAutoBuy.disabled = balance < upgradeCosts["autoBuy"] || upgradeAutoBuy.classList.contains("disabled");
     upgradeAutoSell.disabled = balance < upgradeCosts["autoSell"] || upgradeAutoSell.classList.contains("disabled");
@@ -298,33 +316,53 @@ function updateGame() {
 }
 
 // Generate new Bitcoin value
+let smoothedBitcoinValue = bitcoinValue; // Initialize smoothed value
+
 function updateBitcoinValue() {
-    // Calculate Balance Multiplier
-    const balanceMultiplier = 1 + (balance / 300000); // Very gradual increase based on balance
-    // Example: If balance is $150,000, multiplier = 1.5 (150,000 / 300,000 = 0.5, +1 = 1.5)
+    // Define price ranges based on the player's balance
+    let minPrice, maxPrice;
 
-    // Calculate Price Change
-    const baseChange = (Math.random() - 0.5) * 5; // Smaller price changes (±2.5)
-    const change = baseChange * balanceMultiplier; // Apply balance multiplier
+    if (balance < 500) {
+        minPrice = 70;
+        maxPrice = 500;
+    } else if (balance < 3000) {
+        minPrice = 125;
+        maxPrice = 760;
+    } else if (balance < 20000) {
+        minPrice = 300;
+        maxPrice = 900;
+    } else {
+        minPrice = 614;
+        maxPrice = 1084;
+    }
 
-    // Update Bitcoin Value
-    bitcoinValue += change;
+    // Calculate the base change in Bitcoin value
+    const baseChange = (Math.random() - 0.5) * 2; // Smaller price changes (±1)
+    const change = baseChange * (1 + (balance / 300000)); // Apply balance multiplier
 
-    // Ensure Bitcoin Value Stays Within Bounds
-    if (bitcoinValue < 75) bitcoinValue = 75; // Minimum value is now 75
-    if (bitcoinValue > 1000) bitcoinValue = 1000; // Maximum value is now 1000
+    // Limit the maximum change to 5% of the current value
+    const maxChange = bitcoinValue * 0.05;
+    const clampedChange = Math.min(Math.max(change, -maxChange), maxChange);
 
-    // Update Bitcoin History
+    // Update Bitcoin value
+    bitcoinValue += clampedChange;
+
+    // Ensure Bitcoin value stays within the defined range
+    if (bitcoinValue < minPrice) bitcoinValue = minPrice;
+    if (bitcoinValue > maxPrice) bitcoinValue = maxPrice;
+
+    // Update Bitcoin history
     bitcoinHistory.push(bitcoinValue);
     if (bitcoinHistory.length > 20) bitcoinHistory.shift();
 
-    // Update Game UI
+    // Update game UI
     updateGame();
     drawChart();
 }
 
-// Call updateBitcoinValue every 1000ms (1 second updates)
-setInterval(updateBitcoinValue, 50000);
+
+// Call updateBitcoinValue every 5 seconds
+setInterval(updateBitcoinValue, 5000);
 
 function drawChart() {
     const chartCanvas = document.getElementById("chart");
@@ -439,12 +477,12 @@ function saveGame() {
         achievements,
         // Save upgrade states
         upgrades: {
-            upgrade2x: upgrade2x.classList.contains("disabled"),
-            upgradeAutoBuy: upgradeAutoBuy.classList.contains("disabled"),
-            upgradeAutoSell: upgradeAutoSell.classList.contains("disabled"),
-            upgradeBitcoinMiner: upgradeBitcoinMiner.classList.contains("disabled"),
-            upgradePriceStabilizer: upgradePriceStabilizer.classList.contains("disabled"),
-            upgradeLuckyDip: upgradeLuckyDip.classList.contains("disabled"),
+            upgrade2x: upgrade2x.disabled,
+            upgradeAutoBuy: upgradeAutoBuy.disabled,
+            upgradeAutoSell: upgradeAutoSell.disabled,
+            upgradeBitcoinMiner: upgradeBitcoinMiner.disabled,
+            upgradePriceStabilizer: upgradePriceStabilizer.disabled,
+            upgradeLuckyDip: upgradeLuckyDip.disabled,
         },
     };
     localStorage.setItem("bitcoinBlitzSave", JSON.stringify(gameState));
@@ -472,12 +510,30 @@ function loadGame() {
 
         // Restore upgrade states
         if (gameState.upgrades) {
-            if (gameState.upgrades.upgrade2x) upgrade2x.classList.add("disabled");
-            if (gameState.upgrades.upgradeAutoBuy) upgradeAutoBuy.classList.add("disabled");
-            if (gameState.upgrades.upgradeAutoSell) upgradeAutoSell.classList.add("disabled");
-            if (gameState.upgrades.upgradeBitcoinMiner) upgradeBitcoinMiner.classList.add("disabled");
-            if (gameState.upgrades.upgradePriceStabilizer) upgradePriceStabilizer.classList.add("disabled");
-            if (gameState.upgrades.upgradeLuckyDip) upgradeLuckyDip.classList.add("disabled");
+            if (gameState.upgrades.upgrade2x) {
+                upgrade2x.disabled = true;
+                upgrade2x.classList.add("disabled");
+            }
+            if (gameState.upgrades.upgradeAutoBuy) {
+                upgradeAutoBuy.disabled = true;
+                upgradeAutoBuy.classList.add("disabled");
+            }
+            if (gameState.upgrades.upgradeAutoSell) {
+                upgradeAutoSell.disabled = true;
+                upgradeAutoSell.classList.add("disabled");
+            }
+            if (gameState.upgrades.upgradeBitcoinMiner) {
+                upgradeBitcoinMiner.disabled = true;
+                upgradeBitcoinMiner.classList.add("disabled");
+            }
+            if (gameState.upgrades.upgradePriceStabilizer) {
+                upgradePriceStabilizer.disabled = true;
+                upgradePriceStabilizer.classList.add("disabled");
+            }
+            if (gameState.upgrades.upgradeLuckyDip) {
+                upgradeLuckyDip.disabled = true;
+                upgradeLuckyDip.classList.add("disabled");
+            }
         }
 
         // Update UI
@@ -510,11 +566,13 @@ document.addEventListener('dblclick', function (event) {
 
 
 // Bitcoin Halving (4x Multiplier)
+// Bitcoin Halving (4x Multiplier)
 upgradeBitcoinHalving.addEventListener("click", () => {
-    if (balance >= upgradeCosts["bitcoinHalving"]) {
+    if (balance >= upgradeCosts["bitcoinHalving"] && !upgradeBitcoinHalving.disabled) {
         balance -= upgradeCosts["bitcoinHalving"];
         multiplier *= 2; // Double the multiplier again (2x -> 4x)
-        upgradeBitcoinHalving.classList.add("disabled");
+        upgradeBitcoinHalving.classList.add("disabled"); // Add disabled class
+        upgradeBitcoinHalving.disabled = true; // Disable the button
         updateGame();
         saveGame();
         showFeedback("Bitcoin Halving enabled! Profits are now 4x!");
@@ -524,11 +582,12 @@ upgradeBitcoinHalving.addEventListener("click", () => {
     }
 });
 
+// Bitcoin ATM
 upgradeBitcoinATM.addEventListener("click", () => {
-    if (balance >= upgradeCosts["bitcoinATM"]) {
+    if (balance >= upgradeCosts["bitcoinATM"] && !upgradeBitcoinATM.disabled) {
         balance -= upgradeCosts["bitcoinATM"];
         bitcoinATMEnabled = true;
-        upgradeBitcoinATM.classList.add("disabled");
+        upgradeBitcoinATM.classList.add("disabled"); // Add disabled class
         upgradeBitcoinATM.disabled = true; // Disable the button
         updateGame();
         saveGame();
@@ -539,11 +598,12 @@ upgradeBitcoinATM.addEventListener("click", () => {
     }
 });
 
+// Bitcoin Lottery
 upgradeBitcoinLottery.addEventListener("click", () => {
-    if (balance >= upgradeCosts["bitcoinLottery"]) {
+    if (balance >= upgradeCosts["bitcoinLottery"] && !upgradeBitcoinLottery.disabled) {
         balance -= upgradeCosts["bitcoinLottery"];
         bitcoinLotteryEnabled = true;
-        upgradeBitcoinLottery.classList.add("disabled");
+        upgradeBitcoinLottery.classList.add("disabled"); // Add disabled class
         upgradeBitcoinLottery.disabled = true; // Disable the button
         updateGame();
         saveGame();
@@ -554,11 +614,12 @@ upgradeBitcoinLottery.addEventListener("click", () => {
     }
 });
 
+// Bitcoin Cloud Mining
 upgradeBitcoinCloudMining.addEventListener("click", () => {
-    if (balance >= upgradeCosts["bitcoinCloudMining"]) {
+    if (balance >= upgradeCosts["bitcoinCloudMining"] && !upgradeBitcoinCloudMining.disabled) {
         balance -= upgradeCosts["bitcoinCloudMining"];
         bitcoinCloudMiningEnabled = true;
-        upgradeBitcoinCloudMining.classList.add("disabled");
+        upgradeBitcoinCloudMining.classList.add("disabled"); // Add disabled class
         upgradeBitcoinCloudMining.disabled = true; // Disable the button
         updateGame();
         saveGame();
