@@ -62,7 +62,7 @@ body {
 }
 
 #settingsMenu ul li button {
-    background-color: #26de76;
+    background-color: #393085;
     color: #fff;
     border: none;
     padding: 8px 12px;
@@ -73,7 +73,7 @@ body {
 }
 
 #settingsMenu ul li button:hover {
-    background-color: #252525;
+    background-color: #3d1f49;
 }
 
 html, body {

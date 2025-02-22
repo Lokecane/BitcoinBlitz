@@ -56,12 +56,6 @@ const chartCtx = chartCanvas.getContext("2d");
 chartCanvas.width = chartCanvas.offsetWidth;
 chartCanvas.height = 300;
 
-// Achievements
-const achievements = {
-    first1000: { earned: false, message: "Earned your first $1,000!" },
-    firstBTC: { earned: false, message: "Bought your first Bitcoin!" },
-    rich: { earned: false, message: "Became a Bitcoin millionaire!" },
-};
 
 function checkDailyReward() {
     const lastLogin = localStorage.getItem("lastLogin");
@@ -694,4 +688,81 @@ function toggleSound() {
 function toggleNightMode() {
     document.body.classList.toggle("night-mode");
     showFeedback("Night mode toggled!");
+}
+
+
+function triggerRandomEvent() {
+    const events = [
+        {
+            name: "Bitcoin Boom",
+            message: "Bitcoin price skyrockets due to high demand!",
+            effect: () => {
+                bitcoinValue *= 1.5; // Increase Bitcoin value by 50%
+                showFeedback("Bitcoin Boom! Price increased by 50%!");
+            },
+            probability: 0.1 // 10% chance
+        },
+        {
+            name: "Market Crash",
+            message: "The market crashes! Bitcoin value plummets.",
+            effect: () => {
+                bitcoinValue *= 0.5; // Decrease Bitcoin value by 50%
+                showFeedback("Market Crash! Price dropped by 50%!");
+            },
+            probability: 0.1 // 10% chance
+        },
+        {
+            name: "Lucky Dip",
+            message: "You found a lucky dip! Bitcoin value increases slightly.",
+            effect: () => {
+                bitcoinValue *= 1.2; // Increase Bitcoin value by 20%
+                showFeedback("Lucky Dip! Price increased by 20%!");
+            },
+            probability: 0.2 // 20% chance
+        }
+    ];
+
+    // Trigger a random event based on probability
+    const randomEvent = events.find(event => Math.random() < event.probability);
+    if (randomEvent) {
+        randomEvent.effect();
+    }
+}
+
+// Call this function periodically (e.g., every 30 seconds)
+setInterval(triggerRandomEvent, 30000);
+
+const achievements = {
+    firstBitcoin: { earned: false, message: "Bought your first Bitcoin!" },
+    millionaire: { earned: false, message: "Reached $1,000,000!" },
+    riskTaker: { earned: false, message: "Sold Bitcoin during a market crash!" }
+};
+
+function checkAchievements() {
+    if (bitcoinAmount >= 1 && !achievements.firstBitcoin.earned) {
+        achievements.firstBitcoin.earned = true;
+        showFeedback(achievements.firstBitcoin.message);
+    }
+    if (balance >= 1000000 && !achievements.millionaire.earned) {
+        achievements.millionaire.earned = true;
+        showFeedback(achievements.millionaire.message);
+    }
+}
+
+// Call this function whenever the game state updates
+checkAchievements();
+
+let leaderboard = [];
+
+function updateLeaderboard(playerName, balance, bitcoinAmount) {
+    leaderboard.push({ playerName, balance, bitcoinAmount });
+    leaderboard.sort((a, b) => b.balance - a.balance); // Sort by balance
+    leaderboard = leaderboard.slice(0, 10); // Keep only the top 10 players
+}
+
+function displayLeaderboard() {
+    console.log("Leaderboard:");
+    leaderboard.forEach((entry, index) => {
+        console.log(`${index + 1}. ${entry.playerName}: $${entry.balance}, ${entry.bitcoinAmount} BTC`);
+    });
 }
