@@ -73,7 +73,22 @@ body {
 }
 
 #settingsMenu ul li button:hover {
-    background-color: #1ebf65;
+    background-color: #252525;
+}
+
+html, body {
+    scroll-behavior: smooth; /* Smooth scrolling */
+    overflow-y: auto; /* Enable vertical scrolling */
+    height: 100%; /* Ensure the body takes up the full height */
+}
+
+#gameContainer {
+    min-height: -50vh; /* Ensure the container takes up at least the full viewport height */
+    padding-top: 100px; /* Add padding to push content down */
+}
+
+#gameContainer {
+    margin-top: -5vh; /* Start the game container halfway down the viewport */
 }
 
 
