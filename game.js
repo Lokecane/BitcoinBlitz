@@ -323,33 +323,38 @@ function updateBitcoinValue() {
     let minPrice, maxPrice;
 
     if (balance < 500) {
+        // Price range for balance less than $500
         minPrice = 70;
         maxPrice = 500;
     } else if (balance < 3000) {
+        // Price range for balance between $500 and $3000
         minPrice = 125;
         maxPrice = 760;
     } else if (balance < 20000) {
+        // Price range for balance between $3000 and $20000
         minPrice = 300;
         maxPrice = 900;
     } else {
+        // Price range for balance greater than $20000
         minPrice = 614;
         maxPrice = 1084;
     }
 
     // Calculate the base change in Bitcoin value
-    const baseChange = (Math.random() - 0.5) * 2; // Smaller price changes (±1)
-    const change = baseChange * (1 + (balance / 300000)); // Apply balance multiplier
+    const baseChange = (Math.random() - 0.5) * 10; // Larger price changes (±5)
+    const balanceMultiplier = 1 + (balance / 10000); // More aggressive balance multiplier
+    const change = baseChange * balanceMultiplier; // Apply balance multiplier
 
-    // Limit the maximum change to 5% of the current value
-    const maxChange = bitcoinValue * 0.05;
-    const clampedChange = Math.min(Math.max(change, -maxChange), maxChange);
+    console.log(`Base Change: ${baseChange}, Balance Multiplier: ${balanceMultiplier}, Change: ${change}`);
 
     // Update Bitcoin value
-    bitcoinValue += clampedChange;
+    bitcoinValue += change;
 
     // Ensure Bitcoin value stays within the defined range
     if (bitcoinValue < minPrice) bitcoinValue = minPrice;
     if (bitcoinValue > maxPrice) bitcoinValue = maxPrice;
+
+    console.log(`New Bitcoin Value: $${bitcoinValue}`);
 
     // Update Bitcoin history
     bitcoinHistory.push(bitcoinValue);
@@ -362,7 +367,7 @@ function updateBitcoinValue() {
 
 
 // Call updateBitcoinValue every 5 seconds
-setInterval(updateBitcoinValue, 5000);
+setInterval(updateBitcoinValue, 2000);
 
 function drawChart() {
     const chartCanvas = document.getElementById("chart");
@@ -556,9 +561,6 @@ function startGame() {
     // Load the saved game state after initialization
     loadGame();
 }
-function toggleNightMode() {
-    document.body.classList.toggle("night-mode");
-}
 
 document.addEventListener('dblclick', function (event) {
     event.preventDefault(); // Prevent default double-tap behavior
@@ -655,3 +657,41 @@ setInterval(() => {
     }
 }, 60000);
 
+
+
+// Get references to the settings icon and menu
+const settingsIcon = document.getElementById("settingsIcon");
+const settingsMenu = document.getElementById("settingsMenu");
+
+// Toggle the settings menu visibility
+settingsIcon.addEventListener("click", () => {
+    settingsMenu.classList.toggle("hidden");
+});
+
+// Close the menu when clicking outside of it
+document.addEventListener("click", (event) => {
+    if (!settingsIcon.contains(event.target) && !settingsMenu.contains(event.target)) {
+        settingsMenu.classList.add("hidden");
+    }
+});
+
+// Reset Game
+function resetGame() {
+    localStorage.removeItem("bitcoinBlitzSave");
+    location.reload(); // Reload the page to reset the game
+}
+
+// Toggle Sound
+function toggleSound() {
+    const sounds = [buySound, sellSound, upgradeSound, profitSound, lossSound];
+    sounds.forEach(sound => {
+        sound.muted = !sound.muted;
+    });
+    showFeedback(sounds[0].muted ? "Sound muted!" : "Sound unmuted!");
+}
+
+// Toggle Night Mode
+function toggleNightMode() {
+    document.body.classList.toggle("night-mode");
+    showFeedback("Night mode toggled!");
+}

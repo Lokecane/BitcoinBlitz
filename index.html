@@ -26,13 +26,33 @@
 
     <div id="gameContainer">
         <!-- Header -->
+        
+        <div id="header">
+            <<div id="gameContainer">
+                <!-- Settings Icon -->
+                <div id="settingsIcon">
+                    <i class="fas fa-cog"></i> <!-- FontAwesome cog icon -->
+                </div>
+            
+                <!-- Settings Menu (initially hidden) -->
+                <div id="settingsMenu" class="hidden">
+                    <h3>Settings</h3>
+                    <ul>
+                        <li><button onclick="toggleNightMode()">Toggle Night Mode</button></li>
+                        <li><button onclick="resetGame()">Reset Game</button></li>
+                        <li><button onclick="toggleSound()">Toggle Sound</button></li>
+                    </ul>
+                </div>
+            
+                <!-- Rest of your game content -->
+            </div>
+
         <div id="header">
             <img src="CryptoBlitz.png" alt="CryptoBlitz Logo">
         </div>
 
         <!-- Buy Buttons -->
         <div id="buyButtons">
-            <button onclick="toggleNightMode()" class="button">Toggle Night Mode</button>
             <button class="button" id="buy1Button"><i class="fas fa-coins"></i> Buy 1 BTC</button>
             <button class="button" id="buy5Button"><i class="fas fa-coins"></i> Buy 5 BTC</button>
             <button class="button" id="buy10Button"><i class="fas fa-coins"></i> Buy 10 BTC</button>
