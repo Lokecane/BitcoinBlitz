@@ -325,7 +325,7 @@ function updateBitcoinValue() {
     if (balance < 500) {
         // Price range for balance less than $500
         minPrice = 70;
-        maxPrice = 500;
+        maxPrice = 380;
     } else if (balance < 3000) {
         // Price range for balance between $500 and $3000
         minPrice = 125;
@@ -341,8 +341,8 @@ function updateBitcoinValue() {
     }
 
     // Calculate the base change in Bitcoin value
-    const baseChange = (Math.random() - 0.5) * 10; // Larger price changes (±5)
-    const balanceMultiplier = 1 + (balance / 10000); // More aggressive balance multiplier
+    const baseChange = (Math.random() - 0.5) * 40; // Much larger price changes (±20)
+    const balanceMultiplier = 1 + (balance / 2000); // Very aggressive balance multiplier
     const change = baseChange * balanceMultiplier; // Apply balance multiplier
 
     console.log(`Base Change: ${baseChange}, Balance Multiplier: ${balanceMultiplier}, Change: ${change}`);
@@ -367,7 +367,7 @@ function updateBitcoinValue() {
 
 
 // Call updateBitcoinValue every 5 seconds
-setInterval(updateBitcoinValue, 2000);
+setInterval(updateBitcoinValue, 5000);
 
 function drawChart() {
     const chartCanvas = document.getElementById("chart");
